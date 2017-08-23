@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<!-- 다른 mapper와 중복되지 않도록 네임스페이스 기재 -->
+<mapper namespace="FreplyMapper">
+     
+    <!-- 댓글 입력  문제점 중간에 삭제되면 그룹이름이 꼬임-->
+    <insert id="insertReply" parameterType="net.qna.domain.board.FReply" useGeneratedKeys="true">
+
+        INSERT INTO fre_board (rnum, bnum, replytext, replyer ,regroup, restep, reindent)
+        VALUES (#{rnum}, #{bnum}, #{replytext}, #{replyer}, #{regroup}+1, 0,0)
+		
+		<selectKey keyProperty="regroup" resultType="integer" order="BEFORE">
+   			SELECT MAX(rnum) from fre_board
+	   </selectKey>
+    
+    </insert>
+    
+    <!-- 댓글입력할때 그룹넘버 설정 ㅁㅇㅇㅈㅇ실패-->
+    <update id="setreGroup" parameterType="net.qna.domain.board.FReply" useGeneratedKeys="true">
+    	UPDATE fre_board set regroup = last_insert_id()
+    	
+    </update>
+    
+    <!-- 댓글 목록 -->
+    <select id="listReply" resultType="net.qna.domain.board.FReply">
+        SELECT rnum, bnum, replytext, replyer, date ,regroup, restep, reindent
+        FROM fre_board 
+        WHERE bnum = #{bnum}
+        ORDER BY regroup asc, restep asc, reindent asc
+    </select>
+    
+       <!-- 3. 댓글 상세보기 -->
+    <select id="replymodifyview" resultType="net.qna.domain.board.FReply">
+        SELECT rnum, bnum, replytext, replyer, date, regroup, restep, reindent FROM fre_board
+        WHERE rnum = #{rnum}
+    </select>
+    
+    
+      <!-- 4. 댓글 수정 -->
+    <update id="updateReply">
+        UPDATE FRE_BOARD
+        SET replytext = #{replytext}
+        WHERE rnum = #{rnum}
+    </update>
+    
+     <!-- 5. 댓글 삭제 -->
+    <delete id="deleteReply">
+        DELETE FROM fre_board
+        WHERE rnum = #{rnum}
+    </delete>
+    
+    <!-- 6. 댓글 코맨트 -->
+    <insert id="insertReplyComment">
+    	INSERT INTO fre_board (rnum, bnum, replytext, replyer ,regroup, restep , reindent)
+        VALUES (0, #{bnum}, #{replytext}, #{replyer}, #{regroup} ,#{restep}+1 , #{reindent}+1) 
+    </insert>
+    
+    <!-- 스탭  순서 정리하기 -->
+    <update id="replyStepShape">
+    
+    	UPDATE fRE_BOARD
+    	SET restep = restep + 1
+    	WHERE regroup = #{regroup} and restep > #{restep} 
+    </update>
+</mapper>
